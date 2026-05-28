@@ -53,7 +53,7 @@ DB_CONFIG = {
 # ── Fonction utilitaire : ouvrir une connexion PostgreSQL ─────────────────
 def get_conn():
     """Retourne une connexion psycopg2 à la base de données."""
-    return psycopg2.connect(**DB_CONFIG)
+    return psycopg2.connect(**DB_CONFIG, options="-c client_encoding=UTF8")
 
 
 # ── Fonctions utilitaires pour les réponses JSON ──────────────────────────
@@ -94,7 +94,9 @@ def initialiser_base_de_donnees():
             """)
     conn.commit()
     conn.close()
-    print("OK Tables crees (ou deja existantes) : fire_station, hospital, police")
+    msg = "OK Tables crees (ou deja existantes) : fire_station, hospital, police"
+    sys.stdout.write(msg + "\n")
+    sys.stdout.flush()
 
 
 # ── GET /api/points/<table> ───────────────────────────────────────────────
