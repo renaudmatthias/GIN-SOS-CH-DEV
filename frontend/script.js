@@ -314,7 +314,7 @@ function fermerModal() {
 }
 document.getElementById("apm-close").addEventListener("click",  fermerModal);
 document.getElementById("apm-cancel").addEventListener("click", fermerModal);
-overlayAjout.addEventListener("click", e => { if (e.target === overlayAjout) fermerModal(); });
+// Pas de fermeture au clic extérieur — l'overlay ne couvre plus la carte
 
 function reinitialiserModal() {
   document.querySelectorAll(".apm-type-btn").forEach(b => b.classList.remove("selected"));

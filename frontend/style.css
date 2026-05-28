@@ -334,35 +334,33 @@ header {
   right: 12px !important;
 }
 
-/* ── Overlay + Modale ajout de point ──────────────────────────────────── */
+/* ── Panneau ajout de point (bannière compacte, ne bloque pas la carte) ── */
 #add-point-overlay {
   position: absolute;
-  inset: 0;
-  background: rgba(15,23,42,0.45);
-  backdrop-filter: blur(2px);
+  top: 60px;
+  right: 12px;
   z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
   pointer-events: none;
+  opacity: 0;
   transition: opacity 0.18s ease;
+  /* Pas de fond, pas de inset — la carte reste cliquable */
 }
 #add-point-overlay.apm-visible {
   opacity: 1;
-  pointer-events: all;
+  pointer-events: none; /* laisser les clics passer à travers vers la carte */
 }
 
 #add-point-modal {
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-  width: 380px;
-  max-width: calc(100vw - 32px);
+  width: 360px;
+  max-width: calc(100vw - 24px);
   font-family: 'Segoe UI', Arial, sans-serif;
   overflow: hidden;
-  transform: translateY(8px) scale(0.98);
+  transform: translateY(-6px) scale(0.97);
   transition: transform 0.18s ease;
+  pointer-events: all; /* le panneau lui-même est cliquable */
 }
 #add-point-overlay.apm-visible #add-point-modal {
   transform: translateY(0) scale(1);
