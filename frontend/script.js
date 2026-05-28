@@ -45,8 +45,6 @@ const styleNormal     = { red: creerStyle("red"),   blue: creerStyle("blue"),   
 const styleSelectionne= { red: creerStyle("red",10),blue: creerStyle("blue",10),green: creerStyle("green",10) };
 
 // ── 5. Sources et couches (créées AVANT tout chargement) ──────────────────
-// On crée les sources dès le début, comme ça les points du DB et les GeoJSON
-// vont dans le même endroit et s'affichent tous les deux sur la carte.
 const sources = {
   red:   new ol.source.Vector(),
   blue:  new ol.source.Vector(),
@@ -121,8 +119,6 @@ function chargerGeoJSON(url, couleur) {
 }
 
 // 10b — Points depuis PostgreSQL (ajoutés via l'API)
-// Cette fonction est appelée au démarrage ET après chaque ajout.
-// Elle évite les doublons en vérifiant l'apiId de chaque feature.
 function chargerPointsDB(table, couleur) {
   fetch(`${API_BASE}/points/${table}`)
     .then(r => r.json())
@@ -130,10 +126,8 @@ function chargerPointsDB(table, couleur) {
       if (!data.points || data.points.length === 0) return;
       let nb = 0;
       data.points.forEach(p => {
-        // Ne pas ajouter si déjà présent sur la carte
         const dejaLa = sources[couleur].getFeatures().some(f => f.get("apiId") === p.id);
         if (dejaLa) return;
-        // Créer le point avec les coordonnées float (important !)
         const feat = new ol.Feature({
           geometry: new ol.geom.Point([parseFloat(p.x), parseFloat(p.y)])
         });
@@ -253,16 +247,26 @@ async function calculerMultiItineraires(coordLv95) {
 
 // ── 15. Clic sur la carte ─────────────────────────────────────────────────
 map.on("singleclick", async e => {
-  if (document.getElementById("add-point-overlay").classList.contains("apm-visible")) {
-    const [x,y] = e.coordinate;
-    document.getElementById("apm-x").value = Math.round(x);
-    document.getElementById("apm-y").value = Math.round(y);
+  // Si le modal d'ajout est ouvert → placer le point
+  if (modeAjoutActif) {
+    const [x, y] = e.coordinate;
+    coordsEnAttente = [x, y];
+
+    // Mettre à jour le marqueur preview
     sourcePreview.clear();
-    sourcePreview.addFeature(new ol.Feature({ geometry: new ol.geom.Point([x,y]) }));
-    document.getElementById("apm-coords-icon").textContent = "📍";
-    document.getElementById("apm-coords-text").textContent = `X = ${Math.round(x)},  Y = ${Math.round(y)}`;
-    verifierPretModal(); return;
+    sourcePreview.addFeature(new ol.Feature({ geometry: new ol.geom.Point([x, y]) }));
+
+    // Mettre à jour la zone de feedback dans le modal
+    document.getElementById("apm-click-icon").textContent = "📍";
+    document.getElementById("apm-click-text").textContent =
+      `Point placé — X: ${Math.round(x).toLocaleString("fr-CH")}, Y: ${Math.round(y).toLocaleString("fr-CH")}`;
+    document.getElementById("apm-click-zone").classList.add("apm-click-zone--ok");
+
+    verifierPretModal();
+    return;
   }
+
+  // Sinon → calculer les itinéraires normalement
   await calculerMultiItineraires(e.coordinate);
 });
 map.once("rendercomplete", () => { map.getTargetElement().style.cursor = "crosshair"; });
@@ -286,69 +290,78 @@ document.getElementById("mrp-close").addEventListener("click", () => {
   supprimerTousItineraires(); sourceMarqueur.clear();
 });
 
-// ── 17. Modal AJOUT ───────────────────────────────────────────────────────
-const overlayAjout = document.getElementById("add-point-overlay");
-let typeEnAttente = null;
+// ── 17. Modal AJOUT (clic sur carte uniquement) ───────────────────────────
+const overlayAjout  = document.getElementById("add-point-overlay");
+let typeEnAttente   = null;   // "fire_station" | "police" | "hospital"
+let coordsEnAttente = null;   // [x, y] en LV95, posées par clic
+let modeAjoutActif  = false;  // true quand le modal est ouvert
+
 document.getElementById("btn-add-point").addEventListener("click", () => {
-  overlayAjout.classList.add("apm-visible"); reinitialiserModal();
+  overlayAjout.classList.add("apm-visible");
+  reinitialiserModal();
+  modeAjoutActif = true;
+  // Curseur en croix pour signaler le mode placement
+  map.getTargetElement().style.cursor = "crosshair";
 });
+
 function fermerModal() {
-  overlayAjout.classList.remove("apm-visible"); typeEnAttente = null; sourcePreview.clear();
+  overlayAjout.classList.remove("apm-visible");
+  typeEnAttente   = null;
+  coordsEnAttente = null;
+  modeAjoutActif  = false;
+  sourcePreview.clear();
+  map.getTargetElement().style.cursor = "crosshair";
 }
 document.getElementById("apm-close").addEventListener("click",  fermerModal);
 document.getElementById("apm-cancel").addEventListener("click", fermerModal);
-overlayAjout.addEventListener("click", e => { if (e.target===overlayAjout) fermerModal(); });
+overlayAjout.addEventListener("click", e => { if (e.target === overlayAjout) fermerModal(); });
 
 function reinitialiserModal() {
   document.querySelectorAll(".apm-type-btn").forEach(b => b.classList.remove("selected"));
-  ["apm-name","apm-x","apm-y"].forEach(id => document.getElementById(id).value="");
-  typeEnAttente=null;
-  document.getElementById("apm-submit").disabled=true;
-  document.getElementById("apm-status").textContent="";
-  document.getElementById("apm-coords-icon").textContent="🖱️";
-  document.getElementById("apm-coords-text").textContent="Cliquez sur la carte pour placer le point, ou saisissez les coordonnées LV95.";
+  document.getElementById("apm-name").value = "";
+  typeEnAttente   = null;
+  coordsEnAttente = null;
+  document.getElementById("apm-submit").disabled = true;
+  document.getElementById("apm-status").textContent = "";
+  document.getElementById("apm-click-icon").textContent = "🖱️";
+  document.getElementById("apm-click-text").textContent = "Cliquez n'importe où sur la carte pour placer le point";
+  document.getElementById("apm-click-zone").classList.remove("apm-click-zone--ok");
 }
+
+// Sélection du type de service
 document.querySelectorAll(".apm-type-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".apm-type-btn").forEach(b => b.classList.remove("selected"));
-    btn.classList.add("selected"); typeEnAttente=btn.dataset.type; verifierPretModal();
-  });
-});
-["apm-x","apm-y"].forEach(id => {
-  document.getElementById(id).addEventListener("input", () => {
-    const x=parseFloat(document.getElementById("apm-x").value);
-    const y=parseFloat(document.getElementById("apm-y").value);
-    if (!isNaN(x)&&!isNaN(y)) {
-      sourcePreview.clear();
-      sourcePreview.addFeature(new ol.Feature({ geometry: new ol.geom.Point([x,y]) }));
-    }
+    btn.classList.add("selected");
+    typeEnAttente = btn.dataset.type;
     verifierPretModal();
   });
 });
+
 function verifierPretModal() {
-  const x=document.getElementById("apm-x").value;
-  const y=document.getElementById("apm-y").value;
-  document.getElementById("apm-submit").disabled=!(typeEnAttente&&x&&y);
+  document.getElementById("apm-submit").disabled = !(typeEnAttente && coordsEnAttente);
 }
 
 // Soumission : POST → DB, puis ajout immédiat sur la carte
 document.getElementById("apm-submit").addEventListener("click", async () => {
   const nom = document.getElementById("apm-name").value.trim();
-  const x   = parseFloat(document.getElementById("apm-x").value);
-  const y   = parseFloat(document.getElementById("apm-y").value);
-  document.getElementById("apm-submit").disabled=true;
-  document.getElementById("apm-status").innerHTML=`<span class="apm-saving">Enregistrement…</span>`;
+  const [x, y] = coordsEnAttente;
+
+  document.getElementById("apm-submit").disabled = true;
+  document.getElementById("apm-status").innerHTML = `<span class="apm-saving">Enregistrement…</span>`;
+
   try {
     const res  = await fetch(`${API_BASE}/points/${typeEnAttente}`, {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ name:nom, x, y }),
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: nom, x, y }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.erreur||`HTTP ${res.status}`);
-    document.getElementById("apm-status").innerHTML=`<span class="apm-success">✓ Ajouté (id ${data.id})</span>`;
-    afficherToast("Point ajouté ✓","success");
+    if (!res.ok) throw new Error(data.erreur || `HTTP ${res.status}`);
 
-    // Ajouter sur la carte immédiatement avec les coordonnées exactes
+    document.getElementById("apm-status").innerHTML = `<span class="apm-success">✓ Ajouté (id ${data.id})</span>`;
+    afficherToast("Point ajouté ✓", "success");
+
+    // Ajouter sur la carte immédiatement
     const couleur = TABLE_COULEUR[typeEnAttente];
     const feat    = new ol.Feature({ geometry: new ol.geom.Point([x, y]) });
     feat.set("name",  nom);
@@ -358,8 +371,8 @@ document.getElementById("apm-submit").addEventListener("click", async () => {
 
     setTimeout(fermerModal, 1200);
   } catch(err) {
-    document.getElementById("apm-status").innerHTML=`<span class="apm-error-msg">✗ ${err.message}</span>`;
-    document.getElementById("apm-submit").disabled=false;
+    document.getElementById("apm-status").innerHTML = `<span class="apm-error-msg">✗ ${err.message}</span>`;
+    document.getElementById("apm-submit").disabled  = false;
   }
 });
 
@@ -445,7 +458,6 @@ async function supprimerPointAdmin(id) {
     const data=await res.json();
     if (!res.ok) throw new Error(data.erreur||`HTTP ${res.status}`);
     afficherToast(`Point #${id} supprimé`,"success");
-    // Retirer de la carte
     const couleur=TABLE_COULEUR[table];
     const f=sources[couleur].getFeatures().find(f=>f.get("apiId")===id);
     if (f) sources[couleur].removeFeature(f);

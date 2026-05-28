@@ -434,18 +434,34 @@ header {
 .apm-dot--blue  { background: #1a56db; }
 .apm-dot--green { background: #057a55; }
 
-/* Indice coordonnées */
-.apm-coords-hint {
+/* Zone de clic sur la carte */
+#apm-click-zone {
   background: #f0f7ff;
-  border: 1px solid #c7d9f5;
-  border-radius: 8px;
-  padding: 9px 11px;
-  font-size: 12px;
+  border: 2px dashed #93b8f5;
+  border-radius: 10px;
+  padding: 14px 14px;
+  font-size: 13px;
   color: #2563eb;
   display: flex;
-  align-items: flex-start;
-  gap: 7px;
+  align-items: center;
+  gap: 10px;
+  cursor: crosshair;
+  transition: background 0.2s, border-color 0.2s;
+  user-select: none;
 }
+#apm-click-zone:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+#apm-click-zone.apm-click-zone--ok {
+  background: #f0fdf4;
+  border-color: #86efac;
+  border-style: solid;
+  color: #057a55;
+  font-weight: 600;
+}
+#apm-click-icon { font-size: 20px; flex-shrink: 0; }
+#apm-click-text { line-height: 1.4; }
 
 /* Champs côte à côte */
 .apm-row--2col { display: flex; gap: 10px; }

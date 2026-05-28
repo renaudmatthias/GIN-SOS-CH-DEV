@@ -71,7 +71,7 @@
       <button id="btn-admin-panel" class="rtool-btn rtool-admin" title="Gérer les points (CRUD)">⚙ Gérer</button>
     </div>
 
-    <!-- ── Modal : AJOUTER un point ──────────────────────────────────── -->
+    <!-- ── Modal : AJOUTER un point (bannière compacte + clic sur carte) ── -->
     <div id="add-point-overlay">
       <div id="add-point-modal">
         <div id="apm-header">
@@ -81,37 +81,35 @@
         </div>
         <div id="apm-body">
 
-          <div class="apm-label">Type de service *</div>
-          <div id="apm-type-selector">
-            <button class="apm-type-btn" data-type="fire_station" data-color="red">
-              <span class="apm-dot apm-dot--red"></span>Pompiers
-            </button>
-            <button class="apm-type-btn" data-type="police" data-color="blue">
-              <span class="apm-dot apm-dot--blue"></span>Police
-            </button>
-            <button class="apm-type-btn" data-type="hospital" data-color="green">
-              <span class="apm-dot apm-dot--green"></span>Hôpital
-            </button>
+          <!-- Étape 1 : choisir le type -->
+          <div id="apm-step-type">
+            <div class="apm-label">1 — Type de service *</div>
+            <div id="apm-type-selector">
+              <button class="apm-type-btn" data-type="fire_station" data-color="red">
+                <span class="apm-dot apm-dot--red"></span>Pompiers
+              </button>
+              <button class="apm-type-btn" data-type="police" data-color="blue">
+                <span class="apm-dot apm-dot--blue"></span>Police
+              </button>
+              <button class="apm-type-btn" data-type="hospital" data-color="green">
+                <span class="apm-dot apm-dot--green"></span>Hôpital
+              </button>
+            </div>
           </div>
 
-          <div>
-            <div class="apm-label">Nom du lieu</div>
+          <!-- Étape 2 : nom (optionnel) -->
+          <div id="apm-step-name">
+            <div class="apm-label">2 — Nom du lieu <span style="font-weight:400;text-transform:none;letter-spacing:0">(optionnel)</span></div>
             <input id="apm-name" class="apm-input" type="text"
                    placeholder="Ex: Caserne Nord Yverdon">
           </div>
 
-          <div class="apm-coords-hint">
-            <span id="apm-coords-icon">🖱️</span>
-            <span id="apm-coords-text">Cliquez sur la carte pour placer le point, ou saisissez les coordonnées LV95.</span>
-          </div>
-          <div class="apm-row--2col">
-            <div>
-              <div class="apm-label">X (LV95) *</div>
-              <input id="apm-x" class="apm-input" type="number" placeholder="2660000" step="1">
-            </div>
-            <div>
-              <div class="apm-label">Y (LV95) *</div>
-              <input id="apm-y" class="apm-input" type="number" placeholder="1190000" step="1">
+          <!-- Étape 3 : cliquer sur la carte -->
+          <div id="apm-step-click">
+            <div class="apm-label">3 — Cliquez sur la carte *</div>
+            <div id="apm-click-zone">
+              <span id="apm-click-icon">🖱️</span>
+              <span id="apm-click-text">Cliquez n'importe où sur la carte pour placer le point</span>
             </div>
           </div>
 
