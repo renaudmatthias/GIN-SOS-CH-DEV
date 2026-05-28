@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>SOS-CH</title>
+
+  <!-- OpenLayers — bibliothèque cartographique -->
+  <script src="https://cdn.jsdelivr.net/npm/ol@v10.9.0/dist/ol.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.9.0/ol.css">
+
+  <!-- Proj4 — conversion de projections (LV95 ↔ WGS84) -->
+  <script src="https://cdn.jsdelivr.net/npm/proj4@2.12.1/dist/proj4.js"></script>
+
+  <!-- Bootstrap — mise en page et composants UI -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="d-flex flex-column" style="height: 100vh;">
+
+  <!-- ── En-tête ──────────────────────────────────────────────────────── -->
+  <header class="d-flex align-items-center justify-content-between py-3 mb-0 border-bottom px-3">
+    <img src="Logo.png" alt="SOS-CH" width="100" height="80"
+         onerror="this.style.display='none'">
+    <div class="text-center">
+      <div class="fw-medium">Bienvenue sur SOS-CH</div>
+      <div class="fw-normal">
+        Sélectionnez un point, et vous verrez à quelle distance il se trouve des services d'urgence.
+      </div>
+    </div>
+    <img src="HEIG-VD_logotype_rouge-rvb.png" alt="HEIG-VD" width="100" height="80"
+         onerror="this.style.display='none'">
+  </header>
+
+  <!-- ── Carte (prend tout l'espace restant) ──────────────────────────── -->
+  <div id="map" class="flex-grow-1">
+
+    <!-- Panneau d'information POI (s'affiche au clic sur un point) -->
+    <div id="poi-panel">
+      <div id="poi-header">
+        <span id="poi-emoji"></span>
+        <div>
+          <div id="poi-type"></div>
+          <div id="poi-name"></div>
+        </div>
+        <button id="poi-close">×</button>
+      </div>
+      <div id="poi-body"></div>
+    </div>
+
+    <!-- Toolbar : filtres services + boutons action -->
+    <div id="routing-toolbar">
+      <div id="service-checks">
+        <label class="svc-check-label" title="Pompiers">
+          <input type="checkbox" class="svc-check" data-color="red" checked>
+          <span class="svc-dot svc-dot--red"></span>Pompiers
+        </label>
+        <label class="svc-check-label" title="Police">
+          <input type="checkbox" class="svc-check" data-color="blue" checked>
+          <span class="svc-dot svc-dot--blue"></span>Police
+        </label>
+        <label class="svc-check-label" title="Hôpital">
+          <input type="checkbox" class="svc-check" data-color="green" checked>
+          <span class="svc-dot svc-dot--green"></span>Hôpital
+        </label>
+      </div>
+      <button id="btn-clear-all"  class="rtool-btn rtool-clear" title="Effacer les itinéraires">Effacer</button>
+      <button id="btn-add-point"  class="rtool-btn rtool-add"   title="Ajouter un point de service">+ Ajouter</button>
+      <button id="btn-admin-panel" class="rtool-btn rtool-admin" title="Gérer les points (CRUD)">⚙ Gérer</button>
+    </div>
+
+    <!-- ── Modal : AJOUTER un point ──────────────────────────────────── -->
+    <div id="add-point-overlay">
+      <div id="add-point-modal">
+        <div id="apm-header">
+          <span id="apm-icon">📍</span>
+          <span id="apm-title">Ajouter un point</span>
+          <button id="apm-close">×</button>
+        </div>
+        <div id="apm-body">
+
+          <div class="apm-label">Type de service *</div>
+          <div id="apm-type-selector">
+            <button class="apm-type-btn" data-type="fire_station" data-color="red">
+              <span class="apm-dot apm-dot--red"></span>Pompiers
+            </button>
+            <button class="apm-type-btn" data-type="police" data-color="blue">
+              <span class="apm-dot apm-dot--blue"></span>Police
+            </button>
+            <button class="apm-type-btn" data-type="hospital" data-color="green">
+              <span class="apm-dot apm-dot--green"></span>Hôpital
+            </button>
+          </div>
+
+          <div>
+            <div class="apm-label">Nom du lieu</div>
+            <input id="apm-name" class="apm-input" type="text"
+                   placeholder="Ex: Caserne Nord Yverdon">
+          </div>
+
+          <div class="apm-coords-hint">
+            <span id="apm-coords-icon">🖱️</span>
+            <span id="apm-coords-text">Cliquez sur la carte pour placer le point, ou saisissez les coordonnées LV95.</span>
+          </div>
+          <div class="apm-row--2col">
+            <div>
+              <div class="apm-label">X (LV95) *</div>
+              <input id="apm-x" class="apm-input" type="number" placeholder="2660000" step="1">
+            </div>
+            <div>
+              <div class="apm-label">Y (LV95) *</div>
+              <input id="apm-y" class="apm-input" type="number" placeholder="1190000" step="1">
+            </div>
+          </div>
+
+        </div>
+        <div id="apm-footer">
+          <div id="apm-status"></div>
+          <div id="apm-btns">
+            <button id="apm-cancel" class="apm-btn apm-btn--ghost">Annuler</button>
+            <button id="apm-submit" class="apm-btn apm-btn--primary" disabled>Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Panneau d'ADMINISTRATION (lister / modifier / supprimer) ───── -->
+    <div id="admin-panel" style="display:none;">
+      <div id="adm-header">
+        <span>⚙ Gestion des services d'urgence</span>
+        <button id="adm-close">×</button>
+      </div>
+      <div id="adm-body">
+
+        <!-- Filtre par type de table -->
+        <div id="adm-filter-row">
+          <label class="adm-label">Afficher :</label>
+          <select id="adm-filter-table" class="adm-select">
+            <option value="fire_station">🔴 Pompiers</option>
+            <option value="hospital">🟢 Hôpitaux</option>
+            <option value="police">🔵 Police</option>
+          </select>
+          <button id="adm-refresh" class="adm-btn adm-btn--outline">↺ Actualiser</button>
+        </div>
+
+        <!-- Tableau des points -->
+        <div id="adm-table-wrapper">
+          <table id="adm-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>X (LV95)</th>
+                <th>Y (LV95)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adm-tbody">
+              <tr><td colspan="5" class="adm-loading">Chargement…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Zone d'édition inline -->
+        <div id="adm-edit-zone" style="display:none;">
+          <div class="adm-edit-title">Modifier le point <span id="adm-edit-id"></span></div>
+          <div class="adm-row--2col">
+            <div>
+              <div class="adm-label">Nom</div>
+              <input id="adm-edit-name" class="apm-input" type="text" placeholder="Nom du lieu">
+            </div>
+          </div>
+          <div class="adm-row--2col" style="margin-top:8px;">
+            <div>
+              <div class="adm-label">X (LV95)</div>
+              <input id="adm-edit-x" class="apm-input" type="number" step="1">
+            </div>
+            <div>
+              <div class="adm-label">Y (LV95)</div>
+              <input id="adm-edit-y" class="apm-input" type="number" step="1">
+            </div>
+          </div>
+          <div id="adm-edit-btns">
+            <button id="adm-edit-cancel"  class="adm-btn adm-btn--ghost">Annuler</button>
+            <button id="adm-edit-save"    class="adm-btn adm-btn--primary">Enregistrer</button>
+          </div>
+          <div id="adm-edit-status"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Panneau résultats itinéraires ──────────────────────────────── -->
+    <div id="multi-route-panel">
+      <div id="mrp-header">
+        <div id="mrp-title">Itinéraires calculés</div>
+        <button id="mrp-close">×</button>
+      </div>
+      <div id="mrp-rows">
+        <div class="mrp-row" id="mrp-row-red">
+          <div class="mrp-service">
+            <span class="mrp-dot-sm mrp-dot-sm--red"></span><span>Pompiers</span>
+          </div>
+          <div class="mrp-result" id="mrp-result-red"><span class="mrp-wait">—</span></div>
+        </div>
+        <div class="mrp-row" id="mrp-row-blue">
+          <div class="mrp-service">
+            <span class="mrp-dot-sm mrp-dot-sm--blue"></span><span>Police</span>
+          </div>
+          <div class="mrp-result" id="mrp-result-blue"><span class="mrp-wait">—</span></div>
+        </div>
+        <div class="mrp-row" id="mrp-row-green">
+          <div class="mrp-service">
+            <span class="mrp-dot-sm mrp-dot-sm--green"></span><span>Hôpital</span>
+          </div>
+          <div class="mrp-result" id="mrp-result-green"><span class="mrp-wait">—</span></div>
+        </div>
+      </div>
+      <div id="mrp-footer">Cliquez à nouveau pour un autre point</div>
+    </div>
+
+    <!-- Toast (messages temporaires en bas de l'écran) -->
+    <div id="routing-toast" class="toast-hidden"></div>
+
+    <!-- Légende -->
+    <div id="map-legend" class="position-absolute bottom-0 start-0 m-3 bg-white rounded-3 shadow-sm p-3 small">
+      <div class="d-flex align-items-center gap-2 text-dark mb-2">
+        <span class="legend-dot bg-danger"></span> Caserne de pompiers
+      </div>
+      <div class="d-flex align-items-center gap-2 text-dark mb-2">
+        <span class="legend-dot bg-primary"></span> Poste de police
+      </div>
+      <div class="d-flex align-items-center gap-2 text-dark">
+        <span class="legend-dot bg-success"></span> Hôpital
+      </div>
+    </div>
+
+    <!-- Crédits -->
+    <div id="map-credits">
+      Reto Lazzeri, Matthias Renaud &amp; Florian Zaccomer
+    </div>
+
+  </div><!-- fin #map -->
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
