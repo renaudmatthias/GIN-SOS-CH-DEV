@@ -13,7 +13,6 @@ en Suisse, et de calculer l'itinéraire routier le plus rapide depuis n'importe 
 sos-ch/
 ├── api.py              ← Serveur Flask (API REST)
 ├── init_db.sql         ← Script SQL pour créer la base de données
-├── requirements.txt    ← Dépendances Python
 ├── README.md           ← Ce fichier
 └── frontend/
     ├── index.html      ← Page principale (carte + interface)
@@ -30,12 +29,13 @@ sos-ch/
 
 - **Python 3.9+**
 - **PostgreSQL 13+** avec l'extension **PostGIS** installée
-- Pip : `flask`, `flask-cors`, `pg8000`
 
 ### Installer les dépendances Python
 
 ```bash
-pip install -r requirements.txt
+pip install flask
+pip install flask-cors
+pip install pg8000
 ```
 
 ---
