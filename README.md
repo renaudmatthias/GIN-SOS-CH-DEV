@@ -39,7 +39,9 @@ sos-ch/
 ### Installer les dépendances Python
 
 ```bash
-pip install -r requirements.txt
+pip install flask 
+pip install flask-cors 
+pip install pg8000
 ```
 
 ---
