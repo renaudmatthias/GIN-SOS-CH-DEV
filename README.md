@@ -30,7 +30,7 @@ sos-ch/
 
 - **Python 3.9+**
 - **PostgreSQL 13+** avec l'extension **PostGIS** installée
-- Pip : `flask`, `flask-cors`, `psycopg2-binary`
+- Pip : `flask`, `flask-cors`, `pg8000`
 
 ### Installer les dépendances Python
 
@@ -207,6 +207,7 @@ Les données utilisent le système **LV95 (EPSG:2056)**, le système de coordonn
 |-------------|------|
 | **Flask** (Python) | Serveur web et API REST |
 | **PostgreSQL + PostGIS** | Base de données géospatiale |
+| **pg8000** | Driver Python pur pour PostgreSQL (sans dépendances C) |
 | **OpenLayers 10** | Bibliothèque cartographique |
 | **Swisstopo WMS** | Fond de carte (carte nationale suisse) |
 | **OSRM** | Calcul d'itinéraires routiers (service public) |
