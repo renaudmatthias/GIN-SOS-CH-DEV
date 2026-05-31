@@ -22,8 +22,6 @@ sos-ch/
 │   └── police_v2.geojson              ← Données police (statiques)
 ├── .gitignore
 ├── api.py                             ← Serveur Flask (API REST)
-├── check.py                           ← Vérification encodage PostgreSQL
-├── fix_encoding.py                    ← Correctif encodage Windows
 ├── init_db.sql                        ← Script SQL pour créer la base de données
 └── README.md                          ← Ce fichier
 ```
