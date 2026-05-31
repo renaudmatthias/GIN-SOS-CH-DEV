@@ -102,11 +102,34 @@ function fermerPanneau() {
 }
 document.getElementById("poi-close").addEventListener("click", fermerPanneau);
 
-// ── 10. Chargement des données depuis PostgreSQL ──────────────────────────
-// Prérequis : api.py doit tourner sur localhost:5000
-//             et import_geojson.py doit avoir été exécuté une fois.
+// ── 10. Chargement des données ────────────────────────────────────────────
+// Les fichiers GeoJSON statiques sont toujours chargés (source principale).
+// Les points ajoutés via l'API (base de données) sont chargés en supplément
+// si api.py est disponible, sinon on continue sans erreur bloquante.
 
-let nbTablesEchouees = 0;
+const GEOJSON_FICHIERS = {
+  red:   "fire_station.geojson",
+  blue:  "police_v2.geojson",
+  green: "hospital.geojson",
+};
+
+function chargerGeoJSON(couleur) {
+  const fichier = GEOJSON_FICHIERS[couleur];
+  fetch(fichier)
+    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(geojson => {
+      const features = new ol.format.GeoJSON().readFeatures(geojson, {
+        dataProjection: "EPSG:2056", featureProjection: "EPSG:2056",
+      });
+      features.forEach(f => {
+        f.set("sourceGeojson", true); // marquer comme donnée statique
+        f.set("name", f.get("name") || f.get("Name") || f.get("NAME") || "");
+      });
+      sources[couleur].addFeatures(features);
+      console.log(`OK GeoJSON ${fichier} -> ${features.length} points charges`);
+    })
+    .catch(err => console.error(`Impossible de charger ${fichier} :`, err));
+}
 
 function chargerPointsDB(table, couleur) {
   fetch(`${API_BASE}/export/${table}`)
@@ -119,19 +142,20 @@ function chargerPointsDB(table, couleur) {
         const props = f.getProperties();
         f.set("apiId", props.id);
         f.set("name",  props.name || "");
+        f.set("sourceDB", true); // marquer comme donnée base de données
       });
       sources[couleur].addFeatures(features);
       console.log(`OK DB ${table} -> ${features.length} points charges`);
-      if (features.length === 0)
-        console.warn(`  -> Table ${table} vide : avez-vous lance import_geojson.py ?`);
     })
     .catch(err => {
-      console.error(`Impossible de charger ${table} :`, err);
-      nbTablesEchouees++;
-      if (nbTablesEchouees === 1)
-        afficherToast("API inaccessible — verifiez que api.py tourne sur localhost:5000", "error");
+      console.warn(`API indisponible pour ${table} (normal si api.py ne tourne pas) :`, err);
     });
 }
+
+// Charger d'abord les GeoJSON statiques, puis les points DB en supplément
+chargerGeoJSON("red");
+chargerGeoJSON("blue");
+chargerGeoJSON("green");
 
 chargerPointsDB("fire_station", "red");
 chargerPointsDB("police",       "blue");
@@ -364,7 +388,7 @@ async function chargerTableAdmin() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.erreur||`HTTP ${res.status}`);
     if (data.points.length===0) {
-      tbody.innerHTML=`<tr><td colspan="5" class="adm-loading">Aucun point dans cette table.</td></tr>`; return;
+      tbody.innerHTML=`<tr><td colspan="5" class="adm-loading">Aucun point ajouté en base de données.<br><small style="opacity:.6">Les points des fichiers GeoJSON ne s'affichent pas ici.</small></td></tr>`; return;
     }
     tbody.innerHTML = data.points.map(p=>`
       <tr data-id="${p.id}">
@@ -378,7 +402,7 @@ async function chargerTableAdmin() {
         </td>
       </tr>`).join("");
   } catch(err) {
-    tbody.innerHTML=`<tr><td colspan="5" class="adm-error">Erreur : ${err.message}</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="5" class="adm-error">API inaccessible — vérifiez que api.py tourne sur localhost:5000</td></tr>`;
   }
 }
 function ouvrirEdition(id,nom,x,y) {
