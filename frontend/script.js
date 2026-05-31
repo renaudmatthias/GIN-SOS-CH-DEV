@@ -102,51 +102,37 @@ function fermerPanneau() {
 }
 document.getElementById("poi-close").addEventListener("click", fermerPanneau);
 
-// ── 10. Chargement des données ────────────────────────────────────────────
+// ── 10. Chargement des données depuis PostgreSQL ──────────────────────────
+// Prérequis : api.py doit tourner sur localhost:5000
+//             et import_geojson.py doit avoir été exécuté une fois.
 
-// 10a — GeoJSON statiques (données de base Swisstopo)
-function chargerGeoJSON(url, couleur) {
-  fetch(url)
+let nbTablesEchouees = 0;
+
+function chargerPointsDB(table, couleur) {
+  fetch(`${API_BASE}/export/${table}`)
     .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
     .then(geojson => {
       const features = new ol.format.GeoJSON().readFeatures(geojson, {
         dataProjection: "EPSG:2056", featureProjection: "EPSG:2056",
       });
-      sources[couleur].addFeatures(features);
-      console.log(`✓ GeoJSON : ${url} → ${features.length} points`);
-    })
-    .catch(err => console.error(`✗ GeoJSON ${url} :`, err));
-}
-
-// 10b — Points depuis PostgreSQL (ajoutés via l'API)
-function chargerPointsDB(table, couleur) {
-  fetch(`${API_BASE}/points/${table}`)
-    .then(r => r.json())
-    .then(data => {
-      if (!data.points || data.points.length === 0) return;
-      let nb = 0;
-      data.points.forEach(p => {
-        const dejaLa = sources[couleur].getFeatures().some(f => f.get("apiId") === p.id);
-        if (dejaLa) return;
-        const feat = new ol.Feature({
-          geometry: new ol.geom.Point([parseFloat(p.x), parseFloat(p.y)])
-        });
-        feat.set("name",  p.name || "");
-        feat.set("apiId", p.id);
-        sources[couleur].addFeature(feat);
-        nb++;
+      features.forEach(f => {
+        const props = f.getProperties();
+        f.set("apiId", props.id);
+        f.set("name",  props.name || "");
       });
-      if (nb > 0) console.log(`✓ DB ${table} → ${nb} nouveaux points chargés`);
+      sources[couleur].addFeatures(features);
+      console.log(`OK DB ${table} -> ${features.length} points charges`);
+      if (features.length === 0)
+        console.warn(`  -> Table ${table} vide : avez-vous lance import_geojson.py ?`);
     })
-    .catch(err => console.warn(`API non disponible (${table}) :`, err));
+    .catch(err => {
+      console.error(`Impossible de charger ${table} :`, err);
+      nbTablesEchouees++;
+      if (nbTablesEchouees === 1)
+        afficherToast("API inaccessible — verifiez que api.py tourne sur localhost:5000", "error");
+    });
 }
 
-// Charger les GeoJSON statiques
-chargerGeoJSON("./fire_station.geojson", "red");
-chargerGeoJSON("./police_v2.geojson",    "blue");
-chargerGeoJSON("./hospital.geojson",     "green");
-
-// Charger les points du base de données au démarrage
 chargerPointsDB("fire_station", "red");
 chargerPointsDB("police",       "blue");
 chargerPointsDB("hospital",     "green");
@@ -168,7 +154,7 @@ async function calculerItineraireOSRM(deWgs84, versWgs84) {
   const url = `${OSRM_BASE}/route/v1/driving/${deWgs84[0]},${deWgs84[1]};${versWgs84[0]},${versWgs84[1]}?overview=full&geometries=geojson`;
   const res  = await fetch(url); if (!res.ok) throw new Error(`OSRM ${res.status}`);
   const data = await res.json();
-  if (data.code !== "Ok" || !data.routes?.length) throw new Error("Pas d'itinéraire");
+  if (data.code !== "Ok" || !data.routes?.length) throw new Error("Pas d'itineraire");
   const r = data.routes[0];
   return { time: r.duration, distance: r.distance/1000, coords: r.geometry.coordinates };
 }
@@ -227,7 +213,7 @@ async function calculerMultiItineraires(coordLv95) {
   await Promise.all(sel.map(async c => {
     try {
       const meilleur = await trouverMeilleurPOI(coordLv95, c);
-      if (!meilleur?.route) { document.getElementById(`mrp-result-${c}`).innerHTML=`<span class="mrp-error">Aucun itinéraire</span>`; return; }
+      if (!meilleur?.route) { document.getElementById(`mrp-result-${c}`).innerHTML=`<span class="mrp-error">Aucun itineraire</span>`; return; }
       derniersItineraires[c] = meilleur.route;
       const cb = document.querySelector(`.svc-check[data-color="${c}"]`);
       if (cb?.checked) afficherItineraire(meilleur.route.coords, c);
@@ -241,32 +227,24 @@ async function calculerMultiItineraires(coordLv95) {
       document.getElementById(`mrp-result-${c}`).innerHTML=`<span class="mrp-error">Erreur</span>`;
     }
     nbFini++;
-    if (nbFini === sel.length) afficherToast("Itinéraires calculés ✓","success");
+    if (nbFini === sel.length) afficherToast("Itineraires calcules","success");
   }));
 }
 
 // ── 15. Clic sur la carte ─────────────────────────────────────────────────
 map.on("singleclick", async e => {
-  // Si le modal d'ajout est ouvert → placer le point
   if (modeAjoutActif) {
     const [x, y] = e.coordinate;
     coordsEnAttente = [x, y];
-
-    // Mettre à jour le marqueur preview
     sourcePreview.clear();
     sourcePreview.addFeature(new ol.Feature({ geometry: new ol.geom.Point([x, y]) }));
-
-    // Mettre à jour la zone de feedback dans le modal
     document.getElementById("apm-click-icon").textContent = "📍";
     document.getElementById("apm-click-text").textContent =
-      `Point placé — X: ${Math.round(x).toLocaleString("fr-CH")}, Y: ${Math.round(y).toLocaleString("fr-CH")}`;
+      `Point place — X: ${Math.round(x).toLocaleString("fr-CH")}, Y: ${Math.round(y).toLocaleString("fr-CH")}`;
     document.getElementById("apm-click-zone").classList.add("apm-click-zone--ok");
-
     verifierPretModal();
     return;
   }
-
-  // Sinon → calculer les itinéraires normalement
   await calculerMultiItineraires(e.coordinate);
 });
 map.once("rendercomplete", () => { map.getTargetElement().style.cursor = "crosshair"; });
@@ -290,17 +268,16 @@ document.getElementById("mrp-close").addEventListener("click", () => {
   supprimerTousItineraires(); sourceMarqueur.clear();
 });
 
-// ── 17. Modal AJOUT (clic sur carte uniquement) ───────────────────────────
+// ── 17. Modal AJOUT ───────────────────────────────────────────────────────
 const overlayAjout  = document.getElementById("add-point-overlay");
-let typeEnAttente   = null;   // "fire_station" | "police" | "hospital"
-let coordsEnAttente = null;   // [x, y] en LV95, posées par clic
-let modeAjoutActif  = false;  // true quand le modal est ouvert
+let typeEnAttente   = null;
+let coordsEnAttente = null;
+let modeAjoutActif  = false;
 
 document.getElementById("btn-add-point").addEventListener("click", () => {
   overlayAjout.classList.add("apm-visible");
   reinitialiserModal();
   modeAjoutActif = true;
-  // Curseur en croix pour signaler le mode placement
   map.getTargetElement().style.cursor = "crosshair";
 });
 
@@ -314,7 +291,6 @@ function fermerModal() {
 }
 document.getElementById("apm-close").addEventListener("click",  fermerModal);
 document.getElementById("apm-cancel").addEventListener("click", fermerModal);
-// Pas de fermeture au clic extérieur — l'overlay ne couvre plus la carte
 
 function reinitialiserModal() {
   document.querySelectorAll(".apm-type-btn").forEach(b => b.classList.remove("selected"));
@@ -328,7 +304,6 @@ function reinitialiserModal() {
   document.getElementById("apm-click-zone").classList.remove("apm-click-zone--ok");
 }
 
-// Sélection du type de service
 document.querySelectorAll(".apm-type-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".apm-type-btn").forEach(b => b.classList.remove("selected"));
@@ -342,14 +317,11 @@ function verifierPretModal() {
   document.getElementById("apm-submit").disabled = !(typeEnAttente && coordsEnAttente);
 }
 
-// Soumission : POST → DB, puis ajout immédiat sur la carte
 document.getElementById("apm-submit").addEventListener("click", async () => {
   const nom = document.getElementById("apm-name").value.trim();
   const [x, y] = coordsEnAttente;
-
   document.getElementById("apm-submit").disabled = true;
   document.getElementById("apm-status").innerHTML = `<span class="apm-saving">Enregistrement…</span>`;
-
   try {
     const res  = await fetch(`${API_BASE}/points/${typeEnAttente}`, {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -357,21 +329,16 @@ document.getElementById("apm-submit").addEventListener("click", async () => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.erreur || `HTTP ${res.status}`);
-
-    document.getElementById("apm-status").innerHTML = `<span class="apm-success">✓ Ajouté (id ${data.id})</span>`;
-    afficherToast("Point ajouté ✓", "success");
-
-    // Ajouter sur la carte immédiatement
+    document.getElementById("apm-status").innerHTML = `<span class="apm-success">Ajoute (id ${data.id})</span>`;
+    afficherToast("Point ajoute", "success");
     const couleur = TABLE_COULEUR[typeEnAttente];
     const feat    = new ol.Feature({ geometry: new ol.geom.Point([x, y]) });
     feat.set("name",  nom);
     feat.set("apiId", data.id);
     sources[couleur].addFeature(feat);
-    console.log(`✓ Point ajouté sur la carte : [${x}, ${y}] couleur=${couleur}`);
-
     setTimeout(fermerModal, 1200);
   } catch(err) {
-    document.getElementById("apm-status").innerHTML = `<span class="apm-error-msg">✗ ${err.message}</span>`;
+    document.getElementById("apm-status").innerHTML = `<span class="apm-error-msg">Erreur : ${err.message}</span>`;
     document.getElementById("apm-submit").disabled  = false;
   }
 });
@@ -397,7 +364,7 @@ async function chargerTableAdmin() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.erreur||`HTTP ${res.status}`);
     if (data.points.length===0) {
-      tbody.innerHTML=`<tr><td colspan="5" class="adm-loading">Aucun point ajouté via l'API.</td></tr>`; return;
+      tbody.innerHTML=`<tr><td colspan="5" class="adm-loading">Aucun point dans cette table.</td></tr>`; return;
     }
     tbody.innerHTML = data.points.map(p=>`
       <tr data-id="${p.id}">
@@ -411,7 +378,7 @@ async function chargerTableAdmin() {
         </td>
       </tr>`).join("");
   } catch(err) {
-    tbody.innerHTML=`<tr><td colspan="5" class="adm-error">✗ ${err.message}</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="5" class="adm-error">Erreur : ${err.message}</td></tr>`;
   }
 }
 function ouvrirEdition(id,nom,x,y) {
@@ -444,10 +411,10 @@ document.getElementById("adm-edit-save").addEventListener("click", async () => {
       method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:nom,x,y})});
     const data=await res.json();
     if (!res.ok) throw new Error(data.erreur||`HTTP ${res.status}`);
-    afficherToast("Point modifié ✓","success");
+    afficherToast("Point modifie","success");
     fermerEdition(); chargerTableAdmin();
   } catch(err) {
-    document.getElementById("adm-edit-status").innerHTML=`<span class="apm-error-msg">✗ ${err.message}</span>`;
+    document.getElementById("adm-edit-status").innerHTML=`<span class="apm-error-msg">Erreur : ${err.message}</span>`;
   }
 });
 async function supprimerPointAdmin(id) {
@@ -457,7 +424,7 @@ async function supprimerPointAdmin(id) {
     const res=await fetch(`${API_BASE}/points/${table}/${id}`,{method:"DELETE"});
     const data=await res.json();
     if (!res.ok) throw new Error(data.erreur||`HTTP ${res.status}`);
-    afficherToast(`Point #${id} supprimé`,"success");
+    afficherToast(`Point #${id} supprime`,"success");
     const couleur=TABLE_COULEUR[table];
     const f=sources[couleur].getFeatures().find(f=>f.get("apiId")===id);
     if (f) sources[couleur].removeFeature(f);
