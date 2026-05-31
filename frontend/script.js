@@ -293,7 +293,10 @@ document.getElementById("apm-close").addEventListener("click",  fermerModal);
 document.getElementById("apm-cancel").addEventListener("click", fermerModal);
 
 function reinitialiserModal() {
-  document.querySelectorAll(".apm-type-btn").forEach(b => b.classList.remove("selected"));
+  document.querySelectorAll(".apm-type-btn").forEach(b => {
+    b.classList.remove("btn-primary", "text-white");
+    b.classList.add("btn-outline-secondary");
+  });
   document.getElementById("apm-name").value = "";
   typeEnAttente   = null;
   coordsEnAttente = null;
@@ -306,8 +309,12 @@ function reinitialiserModal() {
 
 document.querySelectorAll(".apm-type-btn").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".apm-type-btn").forEach(b => b.classList.remove("selected"));
-    btn.classList.add("selected");
+    document.querySelectorAll(".apm-type-btn").forEach(b => {
+      b.classList.remove("btn-primary", "text-white");
+      b.classList.add("btn-outline-secondary");
+    });
+    btn.classList.remove("btn-outline-secondary");
+    btn.classList.add("btn-primary", "text-white");
     typeEnAttente = btn.dataset.type;
     verifierPretModal();
   });
@@ -373,8 +380,8 @@ async function chargerTableAdmin() {
         <td>${Math.round(p.x)}</td>
         <td>${Math.round(p.y)}</td>
         <td class="adm-cell-actions">
-          <button class="adm-btn adm-btn--edit"   onclick="ouvrirEdition(${p.id},'${escapeHtml(p.name||'')}',${p.x},${p.y})">✏️</button>
-          <button class="adm-btn adm-btn--delete" onclick="supprimerPointAdmin(${p.id})">🗑️</button>
+          <button class="btn btn-outline-primary btn-sm me-1" onclick="ouvrirEdition(${p.id},'${escapeHtml(p.name||'')}',${p.x},${p.y})">✏️</button>
+          <button class="btn btn-outline-danger btn-sm" onclick="supprimerPointAdmin(${p.id})">🗑️</button>
         </td>
       </tr>`).join("");
   } catch(err) {
@@ -389,15 +396,15 @@ function ouvrirEdition(id,nom,x,y) {
   document.getElementById("adm-edit-y").value=Math.round(y);
   document.getElementById("adm-edit-status").textContent="";
   document.getElementById("adm-edit-zone").style.display="block";
-  document.querySelectorAll("#adm-tbody tr").forEach(tr=>tr.classList.remove("selected"));
+  document.querySelectorAll("#adm-tbody tr").forEach(tr=>tr.classList.remove("table-active"));
   const lr=document.querySelector(`#adm-tbody tr[data-id="${id}"]`);
-  if (lr) lr.classList.add("selected");
+  if (lr) lr.classList.add("table-active");
 }
 function fermerEdition() {
   idEnEdition=null;
   document.getElementById("adm-edit-zone").style.display="none";
   document.getElementById("adm-edit-status").textContent="";
-  document.querySelectorAll("#adm-tbody tr").forEach(tr=>tr.classList.remove("selected"));
+  document.querySelectorAll("#adm-tbody tr").forEach(tr=>tr.classList.remove("table-active"));
 }
 document.getElementById("adm-edit-cancel").addEventListener("click", fermerEdition);
 document.getElementById("adm-edit-save").addEventListener("click", async () => {
