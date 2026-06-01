@@ -951,7 +951,7 @@ document.querySelectorAll(".apm-type-btn").forEach(btn => {
     typeEnAttente = btn.dataset.type;
     verifierPretModal();
   });
-}
+});
 
 // Active le bouton "Enregistrer" seulement si :
 //   - Un type de service a été choisi
@@ -1059,82 +1059,6 @@ document.getElementById("adm-refresh").addEventListener("click", chargerListePoi
 function chargerListePoints() {
   const table = document.getElementById("adm-filter-table").value;
   const tbody = document.getElementById("adm-tbody");
-  tbody.innerHTML=`<tr><td colspan="5" class="adm-loading">Chargement…</td></tr>`;
-  fermerEdition();
-  try {
-    const res  = await fetch(`${API_BASE}/points/${table}`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.erreur||`HTTP ${res.status}`);
-    if (data.points.length===0) {
-      tbody.innerHTML=`<tr><td colspan="5" class="adm-loading">Aucun point ajouté en base de données.<br><small style="opacity:.6">Les points des fichiers GeoJSON ne s'affichent pas ici.</small></td></tr>`; return;
-    }
-    tbody.innerHTML = data.points.map(p=>`
-      <tr data-id="${p.id}">
-        <td class="adm-cell-id">${p.id}</td>
-        <td>${p.name||"—"}</td>
-        <td>${Math.round(p.x)}</td>
-        <td>${Math.round(p.y)}</td>
-        <td class="adm-cell-actions">
-          <button class="btn btn-outline-primary btn-sm me-1" onclick="ouvrirEdition(${p.id},'${escapeHtml(p.name||'')}',${p.x},${p.y})">✏️</button>
-          <button class="btn btn-outline-danger btn-sm" onclick="supprimerPointAdmin(${p.id})">🗑️</button>
-        </td>
-      </tr>`).join("");
-  } catch(err) {
-    tbody.innerHTML=`<tr><td colspan="5" class="adm-error">API inaccessible — vérifiez que api.py tourne sur localhost:5000</td></tr>`;
-  }
-}
-function ouvrirEdition(id,nom,x,y) {
-  idEnEdition=id;
-  document.getElementById("adm-edit-id").textContent=`#${id}`;
-  document.getElementById("adm-edit-name").value=nom;
-  document.getElementById("adm-edit-x").value=Math.round(x);
-  document.getElementById("adm-edit-y").value=Math.round(y);
-  document.getElementById("adm-edit-status").textContent="";
-  document.getElementById("adm-edit-zone").style.display="block";
-  document.querySelectorAll("#adm-tbody tr").forEach(tr=>tr.classList.remove("selected"));
-  const lr=document.querySelector(`#adm-tbody tr[data-id="${id}"]`);
-  if (lr) lr.classList.add("selected");
-}
-function fermerEdition() {
-  idEnEdition=null;
-  document.getElementById("adm-edit-zone").style.display="none";
-  document.getElementById("adm-edit-status").textContent="";
-  document.querySelectorAll("#adm-tbody tr").forEach(tr=>tr.classList.remove("selected"));
-}
-document.getElementById("adm-edit-cancel").addEventListener("click", fermerEdition);
-document.getElementById("adm-edit-save").addEventListener("click", async () => {
-  const table=document.getElementById("adm-filter-table").value;
-  const nom=document.getElementById("adm-edit-name").value.trim();
-  const x=parseFloat(document.getElementById("adm-edit-x").value);
-  const y=parseFloat(document.getElementById("adm-edit-y").value);
-  document.getElementById("adm-edit-status").innerHTML=`<span class="apm-saving">Enregistrement…</span>`;
-  try {
-    const res=await fetch(`${API_BASE}/points/${table}/${idEnEdition}`,{
-      method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:nom,x,y})});
-    const data=await res.json();
-    if (!res.ok) throw new Error(data.erreur||`HTTP ${res.status}`);
-    afficherToast("Point modifie","success");
-    fermerEdition(); chargerTableAdmin();
-  } catch(err) {
-    document.getElementById("adm-edit-status").innerHTML=`<span class="apm-error-msg">Erreur : ${err.message}</span>`;
-  }
-});
-async function supprimerPointAdmin(id) {
-  if (!confirm(`Supprimer le point #${id} ?`)) return;
-  const table=document.getElementById("adm-filter-table").value;
-  try {
-    const res=await fetch(`${API_BASE}/points/${table}/${id}`,{method:"DELETE"});
-    const data=await res.json();
-    if (!res.ok) throw new Error(data.erreur||`HTTP ${res.status}`);
-    afficherToast(`Point #${id} supprime`,"success");
-    const couleur=TABLE_COULEUR[table];
-    const f=sources[couleur].getFeatures().find(f=>f.get("apiId")===id);
-    if (f) sources[couleur].removeFeature(f);
-    chargerTableAdmin();
-  } catch(err) { afficherToast(`Erreur : ${err.message}`,"error"); }
-}
-window.ouvrirEdition=ouvrirEdition;
-window.supprimerPointAdmin=supprimerPointAdmin;
 
   // Afficher "Chargement..." pendant qu'on attend la réponse
   tbody.innerHTML = '<tr><td colspan="5" class="adm-loading">Chargement...</td></tr>';
