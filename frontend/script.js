@@ -397,8 +397,8 @@ async function chargerTableAdmin() {
         <td>${Math.round(p.x)}</td>
         <td>${Math.round(p.y)}</td>
         <td class="adm-cell-actions">
-          <button class="adm-btn adm-btn--edit"   onclick="ouvrirEdition(${p.id},'${escapeHtml(p.name||'')}',${p.x},${p.y})">✏️</button>
-          <button class="adm-btn adm-btn--delete" onclick="supprimerPointAdmin(${p.id})">🗑️</button>
+          <button class="btn btn-outline-primary btn-sm me-1" onclick="ouvrirEdition(${p.id},'${escapeHtml(p.name||'')}',${p.x},${p.y})">✏️</button>
+          <button class="btn btn-outline-danger btn-sm" onclick="supprimerPointAdmin(${p.id})">🗑️</button>
         </td>
       </tr>`).join("");
   } catch(err) {

@@ -66,9 +66,9 @@
           <span class="svc-dot svc-dot--green"></span>Hôpital
         </label>
       </div>
-      <button id="btn-clear-all"  class="rtool-btn rtool-clear" title="Effacer les itinéraires">Effacer</button>
-      <button id="btn-add-point"  class="rtool-btn rtool-add"   title="Ajouter un point de service">+ Ajouter</button>
-      <button id="btn-admin-panel" class="rtool-btn rtool-admin" title="Gérer les points (CRUD)">⚙ Gérer</button>
+      <button id="btn-clear-all"  class="btn btn-light btn-sm shadow-sm px-3 text-danger" title="Effacer les itinéraires">Effacer</button>
+      <button id="btn-add-point"  class="btn btn-light btn-sm shadow-sm px-3 text-success fw-semibold" title="Ajouter un point de service">+ Ajouter</button>
+      <button id="btn-admin-panel" class="btn btn-light btn-sm shadow-sm px-3 rtool-admin" title="Gérer les points (CRUD)">⚙ Gérer</button>
     </div>
 
     <!-- ── Modal : AJOUTER un point (bannière compacte + clic sur carte) ── -->
@@ -85,13 +85,13 @@
           <div id="apm-step-type">
             <div class="apm-label">1 — Type de service *</div>
             <div id="apm-type-selector">
-              <button class="apm-type-btn" data-type="fire_station" data-color="red">
+              <button class="btn btn-outline-secondary btn-sm apm-type-btn" data-type="fire_station" data-color="red">
                 <span class="apm-dot apm-dot--red"></span>Pompiers
               </button>
-              <button class="apm-type-btn" data-type="police" data-color="blue">
+              <button class="btn btn-outline-secondary btn-sm apm-type-btn" data-type="police" data-color="blue">
                 <span class="apm-dot apm-dot--blue"></span>Police
               </button>
-              <button class="apm-type-btn" data-type="hospital" data-color="green">
+              <button class="btn btn-outline-secondary btn-sm apm-type-btn" data-type="hospital" data-color="green">
                 <span class="apm-dot apm-dot--green"></span>Hôpital
               </button>
             </div>
@@ -100,7 +100,7 @@
           <!-- Étape 2 : nom (optionnel) -->
           <div id="apm-step-name">
             <div class="apm-label">2 — Nom du lieu <span style="font-weight:400;text-transform:none;letter-spacing:0">(optionnel)</span></div>
-            <input id="apm-name" class="apm-input" type="text"
+            <input id="apm-name" class="form-control form-control-sm apm-input" type="text"
                    placeholder="Ex: Caserne Nord Yverdon">
           </div>
 
@@ -117,8 +117,8 @@
         <div id="apm-footer">
           <div id="apm-status"></div>
           <div id="apm-btns">
-            <button id="apm-cancel" class="apm-btn apm-btn--ghost">Annuler</button>
-            <button id="apm-submit" class="apm-btn apm-btn--primary" disabled>Enregistrer</button>
+            <button id="apm-cancel" class="btn btn-light btn-sm">Annuler</button>
+            <button id="apm-submit" class="btn btn-primary btn-sm" disabled>Enregistrer</button>
           </div>
         </div>
       </div>
@@ -135,17 +135,17 @@
         <!-- Filtre par type de table -->
         <div id="adm-filter-row">
           <label class="adm-label">Afficher :</label>
-          <select id="adm-filter-table" class="adm-select">
+          <select id="adm-filter-table" class="form-select form-select-sm adm-select">
             <option value="fire_station">🔴 Pompiers</option>
             <option value="hospital">🟢 Hôpitaux</option>
             <option value="police">🔵 Police</option>
           </select>
-          <button id="adm-refresh" class="adm-btn adm-btn--outline">↺ Actualiser</button>
+          <button id="adm-refresh" class="btn btn-light btn-sm">↺ Actualiser</button>
         </div>
 
         <!-- Tableau des points -->
         <div id="adm-table-wrapper">
-          <table id="adm-table">
+          <table id="adm-table" class="table table-sm">
             <thead>
               <tr>
                 <th>ID</th>
@@ -173,16 +173,16 @@
           <div class="adm-row--2col" style="margin-top:8px;">
             <div>
               <div class="adm-label">X (LV95)</div>
-              <input id="adm-edit-x" class="apm-input" type="number" step="1">
+              <input id="adm-edit-x" class="form-control form-control-sm apm-input" type="number" step="1">
             </div>
             <div>
               <div class="adm-label">Y (LV95)</div>
-              <input id="adm-edit-y" class="apm-input" type="number" step="1">
+              <input id="adm-edit-y" class="form-control form-control-sm apm-input" type="number" step="1">
             </div>
           </div>
           <div id="adm-edit-btns">
-            <button id="adm-edit-cancel"  class="adm-btn adm-btn--ghost">Annuler</button>
-            <button id="adm-edit-save"    class="adm-btn adm-btn--primary">Enregistrer</button>
+            <button id="adm-edit-cancel"  class="btn btn-light btn-sm">Annuler</button>
+            <button id="adm-edit-save"    class="btn btn-primary btn-sm">Enregistrer</button>
           </div>
           <div id="adm-edit-status"></div>
         </div>

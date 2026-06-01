@@ -146,23 +146,6 @@ header {
   max-width: calc(100vw - 24px);
 }
 
-/* Boutons génériques de la toolbar */
-.rtool-btn {
-  background: white;
-  border: none;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
-  padding: 8px 14px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
-}
-.rtool-btn:hover   { background: #f0f4ff; }
-.rtool-clear       { color: #e02424; }
-.rtool-clear:hover { background: #fff5f5; }
-.rtool-add         { color: #057a55; font-weight: 600; }
-.rtool-add:hover   { background: #f0fdf4; }
 .rtool-admin       { color: #7c3aed; font-weight: 600; }
 .rtool-admin:hover { background: #f5f3ff; }
 
@@ -496,23 +479,6 @@ header {
 #apm-status { font-size: 12px; flex: 1; }
 #apm-btns   { display: flex; gap: 8px; flex-shrink: 0; }
 
-/* Boutons modale */
-.apm-btn {
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s, opacity 0.15s;
-}
-.apm-btn--ghost   { background: #f1f5f9; color: #555; }
-.apm-btn--ghost:hover { background: #e2e8f0; }
-.apm-btn--primary { background: #1a56db; color: white; }
-.apm-btn--primary:hover:not(:disabled) { background: #1648c0; }
-.apm-btn--primary:disabled { opacity: 0.4; cursor: not-allowed; }
-
 /* Messages de statut */
 .apm-saving    { color: #6b7280; font-style: italic; }
 .apm-success   { color: #057a55; font-weight: 600; }
@@ -596,33 +562,6 @@ header {
   transition: border-color 0.15s;
 }
 .adm-select:focus { border-color: #7c3aed; }
-
-/* Boutons admin */
-.adm-btn {
-  border: none;
-  border-radius: 7px;
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s;
-}
-.adm-btn--outline {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1.5px solid #e5e7eb;
-}
-.adm-btn--outline:hover { background: #e5e7eb; }
-.adm-btn--primary { background: #7c3aed; color: white; }
-.adm-btn--primary:hover { background: #6d28d9; }
-.adm-btn--ghost   { background: #f1f5f9; color: #555; }
-.adm-btn--ghost:hover   { background: #e2e8f0; }
-/* Boutons icône dans le tableau */
-.adm-btn--edit   { background: #eff6ff; color: #1a56db; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 14px; }
-.adm-btn--edit:hover   { background: #dbeafe; }
-.adm-btn--delete { background: #fff5f5; color: #e02424; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 14px; }
-.adm-btn--delete:hover { background: #fee2e2; }
 
 /* Tableau des points */
 #adm-table-wrapper {
