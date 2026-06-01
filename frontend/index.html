@@ -66,9 +66,9 @@
           <span class="svc-dot svc-dot--green"></span>Hôpital
         </label>
       </div>
-      <button id="btn-clear-all" class="btn btn-danger fw-semibold" title="Effacer les itinéraires">Effacer</button>
-      <button id="btn-add-point" class="btn btn-success fw-semibold" title="Ajouter un point de service">Ajouter</button>
-      <button id="btn-admin-panel" class="btn btn-secondary fw-semibold" title="Gérer les points (CRUD)">Gérer</button>
+      <button id="btn-clear-all"  class="btn btn-light btn-sm shadow-sm px-3 text-danger" title="Effacer les itinéraires">Effacer</button>
+      <button id="btn-add-point"  class="btn btn-light btn-sm shadow-sm px-3 text-success fw-semibold" title="Ajouter un point de service">+ Ajouter</button>
+      <button id="btn-admin-panel" class="btn btn-light btn-sm shadow-sm px-3 rtool-admin" title="Gérer les points (CRUD)">⚙ Gérer</button>
     </div>
 
     <!-- ── Modal : AJOUTER un point (bannière compacte + clic sur carte) ── -->
@@ -83,14 +83,14 @@
           <!-- Étape 1 : choisir le type -->
           <div id="apm-step-type">
             <div class="apm-label">1 — Type de service *</div>
-            <div id="apm-type-selector" class="d-flex gap-2">
-              <button class="btn btn-outline-secondary apm-type-btn" data-type="fire_station" data-color="red">
+            <div id="apm-type-selector">
+              <button class="btn btn-outline-secondary btn-sm apm-type-btn" data-type="fire_station" data-color="red">
                 <span class="apm-dot apm-dot--red"></span>Pompiers
               </button>
-              <button class="btn btn-outline-secondary apm-type-btn" data-type="police" data-color="blue">
+              <button class="btn btn-outline-secondary btn-sm apm-type-btn" data-type="police" data-color="blue">
                 <span class="apm-dot apm-dot--blue"></span>Police
               </button>
-              <button class="btn btn-outline-secondary apm-type-btn" data-type="hospital" data-color="green">
+              <button class="btn btn-outline-secondary btn-sm apm-type-btn" data-type="hospital" data-color="green">
                 <span class="apm-dot apm-dot--green"></span>Hôpital
               </button>
             </div>
@@ -114,9 +114,9 @@
         </div>
         <div id="apm-footer">
           <div id="apm-status"></div>
-          <div id="apm-btns" class="d-flex gap-2 flex-shrink-0">
-            <button id="apm-cancel" class="btn btn-light">Annuler</button>
-            <button id="apm-submit" class="btn btn-primary" disabled>Enregistrer</button>
+          <div id="apm-btns">
+            <button id="apm-cancel" class="btn btn-light btn-sm">Annuler</button>
+            <button id="apm-submit" class="btn btn-primary btn-sm" disabled>Enregistrer</button>
           </div>
         </div>
       </div>
@@ -131,14 +131,14 @@
       <div id="adm-body">
 
         <!-- Filtre par type de table -->
-<div id="adm-filter-row" class="d-flex flex-wrap align-items-center gap-2">
-          <label class="adm-label mb-0">Afficher :</label>
-          <select id="adm-filter-table" class="adm-select form-select form-select-sm" style="min-width:180px;">
+        <div id="adm-filter-row">
+          <label class="adm-label">Afficher :</label>
+          <select id="adm-filter-table" class="form-select form-select-sm adm-select">
             <option value="fire_station">🔴 Pompiers</option>
             <option value="hospital">🟢 Hôpitaux</option>
             <option value="police">🔵 Police</option>
           </select>
-          <button id="adm-refresh" class="btn btn-outline-secondary btn-sm">↺ Actualiser</button>
+          <button id="adm-refresh" class="btn btn-light btn-sm">↺ Actualiser</button>
         </div>
 
         <!-- Tableau des points -->

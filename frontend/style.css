@@ -154,6 +154,9 @@ header {
   max-width: calc(100vw - 24px);
 }
 
+.rtool-admin       { color: #7c3aed; font-weight: 600; }
+.rtool-admin:hover { background: #f5f3ff; }
+
 /* Cases à cocher services */
 #service-checks {
   display: flex;
@@ -570,8 +573,6 @@ header {
   transition: border-color 0.15s;
 }
 .adm-select:focus { border-color: #7c3aed; }
-
-
 
 /* Tableau des points */
 #adm-table-wrapper {
