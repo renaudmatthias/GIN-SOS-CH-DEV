@@ -51,8 +51,8 @@
     </div>
 
     <!-- Toolbar : filtres services + boutons action -->
-    <div id="routing-toolbar">
-      <div id="service-checks">
+    <div id="routing-toolbar" class="position-absolute top-0 start-0 m-3 d-flex flex-wrap gap-2" style="z-index:1000; max-width:calc(100vw - 24px);">
+      <div id="service-checks" class="bg-white rounded-3 shadow-sm p-2 d-flex align-items-center gap-2">
         <label class="svc-check-label" title="Pompiers">
           <input type="checkbox" class="svc-check" data-color="red" checked>
           <span class="svc-dot svc-dot--red"></span>Pompiers
@@ -75,7 +75,6 @@
     <div id="add-point-overlay">
       <div id="add-point-modal">
         <div id="apm-header">
-          <span id="apm-icon">📍</span>
           <span id="apm-title">Ajouter un point</span>
           <button id="apm-close">×</button>
         </div>
@@ -108,7 +107,6 @@
           <div id="apm-step-click">
             <div class="apm-label">3 — Cliquez sur la carte *</div>
             <div id="apm-click-zone">
-              <span id="apm-click-icon">🖱️</span>
               <span id="apm-click-text">Cliquez n'importe où sur la carte pour placer le point</span>
             </div>
           </div>
@@ -127,7 +125,7 @@
     <!-- ── Panneau d'ADMINISTRATION (lister / modifier / supprimer) ───── -->
     <div id="admin-panel" style="display:none;">
       <div id="adm-header">
-        <span>⚙ Gestion des services d'urgence</span>
+        <span>Gestion des services d'urgence</span>
         <button id="adm-close">×</button>
       </div>
       <div id="adm-body">
@@ -167,7 +165,7 @@
           <div class="adm-row--2col">
             <div>
               <div class="adm-label">Nom</div>
-              <input id="adm-edit-name" class="apm-input" type="text" placeholder="Nom du lieu">
+              <input id="adm-edit-name" class="form-control form-control-sm apm-input" type="text" placeholder="Nom du lieu">
             </div>
           </div>
           <div class="adm-row--2col" style="margin-top:8px;">
@@ -233,6 +231,16 @@
       <div class="d-flex align-items-center gap-2 text-dark">
         <span class="legend-dot bg-success"></span> Hôpital
       </div>
+    </div>
+
+    <!-- Numéro des services d'urgence -->
+    <div id="map-emergency">
+      <strong>Numéros des services d'urgence</strong><br>
+      Pompiers : 118<br>
+      Police : 117<br>
+      Ambulance : 144<br>
+      Rega : 1414<br>
+      Intoxication : 145
     </div>
 
     <!-- Crédits -->
